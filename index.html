@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Trinity Grade 7 Clarinet Trainer</title>
+  <!-- VexFlow Library for Sheet Music Rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+  <style>
+    :root {
+      --primary: #2c3e50;
+      --accent: #2980b9;
+      --success: #27ae60;
+      --warning: #e67e22;
+      --danger: #c0392b;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --text: #333333;
+    }
+
+    * { box-sizing: border-box; touch-action: manipulation; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    h1, h2 { text-align: center; color: var(--primary); margin-top: 0; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* Button Styles for Touch Screens */
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      margin: 10px 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.2s;
+    }
+    .btn:active { opacity: 0.85; }
+    .btn-success { background: var(--success); }
+    .btn-warning { background: var(--warning); }
+    .btn-secondary { background: #7f8c8d; }
+    .btn-group { display: flex; gap: 10px; }
+    .btn-group .btn { flex: 1; }
+
+    /* Practice Display Screen */
+    .prompt-box {
+      background: #edf2f7;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .prompt-title { font-size: 2.2rem; font-weight: bold; color: var(--primary); }
+    .prompt-detail { font-size: 1.2rem; color: #666; margin-top: 5px; }
+
+    #notation-paper {
+      width: 100%;
+      overflow-x: auto;
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 20px;
+      min-height: 180px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Selection List Styles */
+    .exercise-list {
+      max-height: 350px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 20px;
+    }
+    .exercise-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    .exercise-item:last-child { border-bottom: none; }
+    .exercise-item input { margin-right: 12px; transform: scale(1.3); }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+    select, input[type="text"], input[type="range"] {
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    .saved-setup-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      background: #f1f1f1;
+      margin-bottom: 8px;
+      border-radius: 6px;
+    }
+    .saved-setup-item span { font-size: 1.1rem; font-weight: bold; }
+    .saved-setup-item div { display: flex; gap: 6px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- MAIN MENU -->
+  <div id="screen-main" class="screen active">
+    <h1>Clarinet Grade 7 Trainer</h1>
+    <p style="text-align:center; color:#666;">Trinity College London Scales & Arpeggios</p>
+    <button class="btn btn-success" onclick="startPractice()">Start Practice</button>
+    <button class="btn" onclick="showScreen('screen-setup')">Change Setup</button>
+    <button class="btn" onclick="showScreen('screen-saved')">Saved Setups</button>
+    <button class="btn btn-warning" onclick="randomizeAllAndStart()">Randomise All & Start</button>
+  </div>
+
+  <!-- SETUP SCREEN -->
+  <div id="screen-setup" class="screen">
+    <h2>Setup Exercises</h2>
+    <div class="control-row">
+      <label for="display-mode"><strong>Prompt Display:</strong></label>
+      <select id="display-mode">
+        <option value="tonal">Tonal Centre Only (e.g., F♯)</option>
+        <option value="full">Full Name (e.g., F♯ Diminished 7th)</option>
+      </select>
+    </div>
+    <div class="control-row">
+      <label for="tempo-control"><strong>Playback Tempo:</strong> <span id="tempo-val">120</span> BPM</label>
+      <input type="range" id="tempo-control" min="60" max="180" value="120" oninput="document.getElementById('tempo-val').innerText=this.value">
+    </div>
+    
+    <div style="margin-bottom: 10px; display: flex; gap: 10px;">
+      <button class="btn btn-secondary" style="padding: 8px;" onclick="toggleSelectAll(true)">Select All</button>
+      <button class="btn btn-secondary" style="padding: 8px;" onclick="toggleSelectAll(false)">Clear All</button>
+    </div>
+
+    <div class="exercise-list" id="exercise-checkboxes"></div>
+
+    <div style="margin-bottom: 15px;">
+      <input type="text" id="setup-name-input" placeholder="Setup Name (e.g., Weak Scales)" style="width: 60%;">
+      <button class="btn btn-success" style="display:inline-block; width: 35%; margin: 0;" onclick="saveCurrentSetup()">Save Setup</button>
+    </div>
+
+    <button class="btn" onclick="saveSetupAndStart()">Start Selected Practice</button>
+    <button class="btn btn-secondary" onclick="showScreen('screen-main')">Back to Menu</button>
+  </div>
+
+  <!-- SAVED SETUPS SCREEN -->
+  <div id="screen-saved" class="screen">
+    <h2>Saved Setups</h2>
+    <div id="saved-setups-container"></div>
+    <button class="btn btn-secondary" onclick="showScreen('screen-main')">Back to Menu</button>
+  </div>
+
+  <!-- PRACTICE SCREEN -->
+  <div id="screen-practice" class="screen">
+    <div class="prompt-box">
+      <div id="prompt-main" class="prompt-title">---</div>
+      <div id="prompt-sub" class="prompt-detail"></div>
+    </div>
+
+    <div id="notation-paper"></div>
+
+    <div class="btn-group">
+      <button id="btn-reveal" class="btn btn-warning" onclick="revealExercise()">Reveal Notation</button>
+      <button id="btn-play" class="btn btn-success" onclick="playCurrentExercise()">Play Audio</button>
+    </div>
+    <button id="btn-continue" class="btn" onclick="nextExercise()">Continue</button>
+    <button class="btn btn-secondary" onclick="stopAudio(); showScreen('screen-main')">Main Menu</button>
+  </div>
+</div>
+
+<script>
+/* ==========================================================================
+   2. EXERCISES DATA SYSTEM
+   Pitches are represented in Treble Clef pitch string format (e.g., 'f/3', 'g#/4').
+   ========================================================================== */
+const EXERCISES_DATABASE = [
+  {
+    id: 'scale_maj_c',
+    tonalCentre: 'C',
+    name: 'Major Scale',
+    range: '3 octaves',
+    category: 'Scales',
+    // C3 to C6
+    notes: ['c/3','d/3','e/3','f/3','g/3','a/3','b/3','c/4','d/4','e/4','f/4','g/4','a/4','b/4','c/5','d/5','e/5','f/5','g/5','a/5','b/5','c/6',
+            'b/5','a/5','g/5','f/5','e/5','d/5','c/5','b/4','a/4','g/4','f/4','e/4','d/4','c/4','b/3','a/3','g/3','f/3','e/3','d/3','c/3']
+  },
+  {
+    id: 'scale_mel_min_c',
+    tonalCentre: 'C',
+    name: 'Melodic Minor Scale',
+    range: '3 octaves',
+    category: 'Scales',
+    notes: ['c/3','d/3','eb/3','f/3','g/3','a/3','b/3','c/4','d/4','eb/4','f/4','g/4','a/4','b/4','c/5','d/5','eb/5','f/5','g/5','a/5','b/5','c/6',
+            'bb/5','ab/5','g/5','f/5','eb/5','d/5','c/5','bb/4','ab/4','g/4','f/4','eb/4','d/4','c/4','bb/3','ab/3','g/3','f/3','eb/3','d/3','c/3']
+  },
+  {
+    id: 'scale_harm_min_c',
+    tonalCentre: 'C',
+    name: 'Harmonic Minor Scale',
+    range: '3 octaves',
+    category: 'Scales',
+    notes: ['c/3','d/3','eb/3','f/3','g/3','ab/3','b/3','c/4','d/4','eb/4','f/4','g/4','ab/4','b/4','c/5','d/5','eb/5','f/5','g/5','ab/5','b/5','c/6',
+            'b/5','ab/5','g/5','f/5','eb/5','d/5','c/5','b/4','ab/4','g/4','f/4','eb/4','d/4','c/4','b/3','ab/3','g/3','f/3','eb/3','d/3','c/3']
+  },
+  {
+    id: 'chromatic_fsharp',
+    tonalCentre: 'F♯',
+    name: 'Chromatic Scale',
+    range: '3 octaves',
+    category: 'Scales',
+    notes: ['f#/3','g/3','g#/3','a/3','a#/3','b/3','c/4','c#/4','d/4','d#/4','e/4','f/4','f#/4','g/4','g#/4','a/4','a#/4','b/4','c/5','c#/5','d/5','d#/5','e/5','f/5','f#/5','g/5','g#/5','a/5','a#/5','b/5','c/6','c#/6','d/6','d#/6','e/6','f/6','f#/6',
+            'f/6','e/6','d#/6','d/6','c#/6','c/6','b/5','a#/5','a/5','g#/5','g/5','f#/5','f/5','e/5','d#/5','d/5','c#/5','c/5','b/4','a#/4','a/4','g#/4','g/4','f#/4','f/4','e/4','d#/4','d/4','c#/4','c/4','b/3','a#/3','a/3','g#/3','g/3','f#/3']
+  },
+  {
+    id: 'pentatonic_bb',
+    tonalCentre: 'B♭',
+    name: 'Major Pentatonic Scale',
+    range: '2 octaves',
+    category: 'Scales',
+    notes: ['bb/3','c/4','d/4','f/4','g/4','bb/4','c/5','d/5','f/5','g/5','bb/5',
+            'g/5','f/5','d/5','c/5','bb/4','g/4','f/4','d/4','c/4','bb/3']
+  },
+  {
+    id: 'pentatonic_eb',
+    tonalCentre: 'E♭',
+    name: 'Major Pentatonic Scale',
+    range: '2 octaves',
+    category: 'Scales',
+    notes: ['eb/4','f/4','g/4','bb/4','c/5','eb/5','f/5','g/5','bb/5','c/6','eb/6',
+            'c/6','bb/5','g/5','f/5','eb/5','c/5','bb/4','g/4','f/4','eb/4']
+  },
+  {
+    id: 'wholetone_eb',
+    tonalCentre: 'E♭',
+    name: 'Whole Tone Scale',
+    range: '2 octaves',
+    category: 'Scales',
+    notes: ['eb/4','f/4','g/4','a/4','b/4','c#/5','eb/5','f/5','g/5','a/5','b/5','c#/6','eb/6',
+            'c#/6','b/5','a/5','g/5','f/5','eb/5','c#/5','b/4','a/4','g/4','f/4','eb/4']
+  },
+  {
+    id: 'arp_maj_c',
+    tonalCentre: 'C',
+    name: 'Major Arpeggio',
+    range: '3 octaves',
+    category: 'Arpeggios',
+    notes: ['c/3','e/3','g/3','c/4','e/4','g/4','c/5','e/5','g/5','c/6',
+            'g/5','e/5','c/5','g/4','e/4','c/4','g/3','e/3','c/3']
+  },
+  {
+    id: 'arp_min_c',
+    tonalCentre: 'C',
+    name: 'Minor Arpeggio',
+    range: '3 octaves',
+    category: 'Arpeggios',
+    notes: ['c/3','eb/3','g/3','c/4','eb/4','g/4','c/5','eb/5','g/5','c/6',
+            'g/5','eb/5','c/5','g/4','eb/4','c/4','g/3','eb/3','c/3']
+  },
+  {
+    id: 'dim7_fsharp',
+    tonalCentre: 'F♯',
+    name: 'Diminished 7th Arpeggio',
+    range: '3 octaves',
+    category: 'Arpeggios',
+    notes: ['f#/3','a/3','c/4','eb/4','f#/4','a/4','c/5','eb/5','f#/5','a/5','c/6','eb/6','f#/6',
+            'eb/6','c/6','a/5','f#/5','eb/5','c/5','a/4','f#/4','eb/4','c/4','a/3','f#/3']
+  },
+  {
+    id: 'dom7_eb',
+    tonalCentre: 'E♭',
+    name: 'Dominant 7th Arpeggio',
+    range: '2 octaves',
+    category: 'Arpeggios',
+    notes: ['eb/4','g/4','bb/4','db/5','eb/5','g/5','bb/5','db/6','eb/6',
+            'db/6','bb/5','g/5','eb/5','db/5','bb/4','g/4','eb/4']
+  },
+  {
+    id: 'dom7_g',
+    tonalCentre: 'G',
+    name: 'Dominant 7th Arpeggio',
+    range: '2 octaves',
+    category: 'Arpeggios',
+    notes: ['g/3','b/3','d/4','f/4','g/4','b/4','d/5','f/5','g/5',
+            'f/5','d/5','b/4','g/4','f/4','d/4','b/3','g/3']
+  },
+  {
+    id: 'aug_d',
+    tonalCentre: 'D',
+    name: 'Augmented Arpeggio',
+    range: '2 octaves',
+    category: 'Arpeggios',
+    notes: ['d/4','f#/4','a#/4','d/5','f#/5','a#/5','d/6',
+            'a#/5','f#/5','d/5','a#/4','f#/4','d/4']
+  }
+];
+
+/* ==========================================================================
+   APP STATE & STORAGE
+   ========================================================================== */
+let activeQueue = [];
+let currentIndex = 0;
+let isRevealed = false;
+let audioContext = null;
+let currentOscillators = [];
+
+// Initialize Setup UI Checkboxes
+function initSetupUI() {
+  const container = document.getElementById('exercise-checkboxes');
+  container.innerHTML = '';
+  EXERCISES_DATABASE.forEach((ex, idx) => {
+    const div = document.createElement('div');
+    div.className = 'exercise-item';
+    div.innerHTML = `
+      <input type="checkbox" id="ex-${idx}" value="${ex.id}" checked>
+      <label for="ex-${idx}"><strong>${ex.tonalCentre}</strong> ${ex.name} (${ex.range})</label>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function toggleSelectAll(status) {
+  EXERCISES_DATABASE.forEach((_, idx) => {
+    const cb = document.getElementById(`ex-${idx}`);
+    if (cb) cb.checked = status;
+  });
+}
+
+function showScreen(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+  if (screenId === 'screen-saved') renderSavedSetups();
+}
+
+/* ==========================================================================
+   1. MAIN PRACTICE & SAVED SETUPS LOGIC
+   ========================================================================== */
+function getSelectedIds() {
+  return EXERCISES_DATABASE.map((ex, idx) => {
+    const cb = document.getElementById(`ex-${idx}`);
+    return cb && cb.checked ? ex.id : null;
+  }).filter(Boolean);
+}
+
+function startPracticeWithList(exerciseIds) {
+  if (exerciseIds.length === 0) {
+    alert("Please select at least one exercise.");
+    return;
+  }
+  activeQueue = EXERCISES_DATABASE.filter(ex => exerciseIds.includes(ex.id));
+  currentIndex = 0;
+  showScreen('screen-practice');
+  loadExercise(currentIndex);
+}
+
+function startPractice() {
+  startPracticeWithList(getSelectedIds());
+}
+
+function saveSetupAndStart() {
+  startPractice();
+}
+
+function randomizeAllAndStart() {
+  const allIds = EXERCISES_DATABASE.map(ex => ex.id);
+  // Shuffle algorithm (Fisher-Yates)
+  for (let i = allIds.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [allIds[i], allIds[j]] = [allIds[j], allIds[i]];
+  }
+  startPracticeWithList(allIds);
+}
+
+// LocalStorage Setup Management
+function getSavedSetups() {
+  return JSON.parse(localStorage.getItem('clarinet_setups') || '{}');
+}
+
+function saveCurrentSetup() {
+  const nameInput = document.getElementById('setup-name-input');
+  const name = nameInput.value.trim();
+  if (!name) { alert("Enter a setup name."); return; }
+  
+  const selected = getSelectedIds();
+  const setups = getSavedSetups();
+  setups[name] = selected;
+  localStorage.setItem('clarinet_setups', JSON.stringify(setups));
+  nameInput.value = '';
+  alert(`Setup "${name}" saved!`);
+}
+
+function renderSavedSetups() {
+  const container = document.getElementById('saved-setups-container');
+  const setups = getSavedSetups();
+  container.innerHTML = '';
+  
+  const keys = Object.keys(setups);
+  if (keys.length === 0) {
+    container.innerHTML = '<p style="text-align:center;">No saved setups found.</p>';
+    return;
+  }
+
+  keys.forEach(name => {
+    const div = document.createElement('div');
+    div.className = 'saved-setup-item';
+    div.innerHTML = `
+      <span>${name} (${setups[name].length} items)</span>
+      <div>
+        <button class="btn btn-success" style="padding:6px 12px; margin:0;" onclick="loadSavedSetup('${name}')">Load</button>
+        <button class="btn btn-danger" style="padding:6px 12px; margin:0;" onclick="deleteSavedSetup('${name}')">Delete</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function loadSavedSetup(name) {
+  const setups = getSavedSetups();
+  const ids = setups[name] || [];
+  EXERCISES_DATABASE.forEach((ex, idx) => {
+    const cb = document.getElementById(`ex-${idx}`);
+    if (cb) cb.checked = ids.includes(ex.id);
+  });
+  startPracticeWithList(ids);
+}
+
+function deleteSavedSetup(name) {
+  const setups = getSavedSetups();
+  delete setups[name];
+  localStorage.setItem('clarinet_setups', JSON.stringify(setups));
+  renderSavedSetups();
+}
+
+/* ==========================================================================
+   3. PRACTICE SCREEN & VEXFLOW NOTATION
+   ========================================================================== */
+function loadExercise(index) {
+  stopAudio();
+  isRevealed = false;
+  const ex = activeQueue[index];
+  const mode = document.getElementById('display-mode').value;
+
+  const mainTitle = document.getElementById('prompt-main');
+  const subTitle = document.getElementById('prompt-sub');
+  
+  if (mode === 'tonal') {
+    mainTitle.innerText = ex.tonalCentre;
+    subTitle.innerText = `Exercise ${index + 1} of ${activeQueue.length}`;
+  } else {
+    mainTitle.innerText = `${ex.tonalCentre} ${ex.name}`;
+    subTitle.innerText = `${ex.range} (${index + 1} of ${activeQueue.length})`;
+  }
+
+  document.getElementById('notation-paper').innerHTML = '<p style="color:#aaa;">[ Click "Reveal Notation" to view sheet music ]</p>';
+  document.getElementById('btn-reveal').style.display = 'block';
+  document.getElementById('btn-play').style.display = 'none';
+}
+
+function revealExercise() {
+  if (isRevealed) return;
+  isRevealed = true;
+  document.getElementById('btn-reveal').style.display = 'none';
+  document.getElementById('btn-play').style.display = 'block';
+
+  renderNotation(activeQueue[currentIndex].notes);
+}
+
+function renderNotation(noteArray) {
+  const container = document.getElementById('notation-paper');
+  container.innerHTML = '';
+
+  const VF = Vex.Flow;
+  
+  // Calculate dynamic width based on note count
+  const noteWidth = 30;
+  const width = Math.max(container.clientWidth - 20, noteArray.length * noteWidth + 80);
+  const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
+  renderer.resize(width, 160);
+  const context = renderer.getContext();
+
+  const stave = new VF.Stave(10, 20, width - 20);
+  stave.addClef("treble");
+  // NO Key Signature added -> absolute individual accidentals
+  stave.setContext(context).draw();
+
+  // Map pitch keys to VexFlow StaveNote items with individual accidentals
+  const vexNotes = noteArray.map(pitch => {
+    const parts = pitch.split('/');
+    const noteLetter = parts[0];
+    const octave = parts[1];
+    
+    const staveNote = new VF.StaveNote({
+      clef: "treble",
+      keys: [pitch],
+      duration: "q"
+    });
+
+    if (noteLetter.includes('#')) {
+      staveNote.addModifier(new VF.Accidental("#"));
+    } else if (noteLetter.includes('b')) {
+      staveNote.addModifier(new VF.Accidental("b"));
+    } else {
+      // Add natural sign explicitly if required for clear accidental spelling
+    }
+    return staveNote;
+  });
+
+  // Group into measures/voices for rendering
+  const voice = new VF.Voice({ num_beats: noteArray.length, beat_value: 4 });
+  voice.setStrict(false);
+  voice.addTickables(vexNotes);
+
+  new VF.Formatter().joinVoices([voice]).format([voice], width - 80);
+  voice.draw(context, stave);
+}
+
+function nextExercise() {
+  currentIndex++;
+  if (currentIndex >= activeQueue.length) {
+    alert("Practice session completed!");
+    showScreen('screen-main');
+  } else {
+    loadExercise(currentIndex);
+  }
+}
+
+/* ==========================================================================
+   4. AUDIO PLAYBACK SYSTEM (Web Audio API)
+   ========================================================================== */
+function pitchToFreq(pitch) {
+  const noteMap = { 'c':0, 'c#':1, 'db':1, 'd':2, 'd#':3, 'eb':3, 'e':4, 'f':5, 'f#':6, 'gb':6, 'g':7, 'g#':8, 'ab':8, 'a':9, 'a#':10, 'bb':10, 'b':11 };
+  const parts = pitch.split('/');
+  const name = parts[0];
+  const octave = parseInt(parts[1], 10);
+  const semitone = noteMap[name];
+  const midi = (octave + 1) * 12 + semitone;
+  return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+function initAudioContext() {
+  if (!audioContext) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    audioContext = new AudioContextClass();
+  }
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+}
+
+function stopAudio() {
+  currentOscillators.forEach(osc => {
+    try { osc.stop(); } catch(e){}
+  });
+  currentOscillators = [];
+}
+
+function playCurrentExercise() {
+  initAudioContext();
+  stopAudio();
+
+  const notes = activeQueue[currentIndex].notes;
+  const bpm = parseInt(document.getElementById('tempo-control').value, 10);
+  const noteDuration = 60 / bpm; // duration in seconds per note
+
+  let startTime = audioContext.currentTime + 0.1;
+
+  notes.forEach((pitch, i) => {
+    const freq = pitchToFreq(pitch);
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    osc.type = 'triangle'; // Smooth tone suitable for woodwinds
+    osc.frequency.setValueAtTime(freq, startTime + i * noteDuration);
+
+    // Envelope to avoid audio clicks
+    gain.gain.setValueAtTime(0, startTime + i * noteDuration);
+    gain.gain.linearRampToValueAtTime(0.3, startTime + i * noteDuration + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + (i + 1) * noteDuration - 0.02);
+
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+
+    osc.start(startTime + i * noteDuration);
+    osc.stop(startTime + (i + 1) * noteDuration);
+
+    currentOscillators.push(osc);
+  });
+}
+
+// Initialize setup list on startup
+window.onload = function() {
+  initSetupUI();
+};
+</script>
+</body>
+</html>
