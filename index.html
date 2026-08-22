@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scales Manager</title>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 20px auto; padding: 0 10px; }
+    .menu-panel { border: 1px solid #ccc; border-radius: 6px; padding: 15px; margin-bottom: 20px; }
+    .controls { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; }
+    .field-group { margin-bottom: 12px; }
+    label { display: block; font-weight: bold; margin-bottom: 4px; }
+    input[type="text"], input[type="number"], select {
+      width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;
+    }
+    .variations-container { margin-left: 20px; padding-left: 10px; border-left: 2px solid #ddd; }
+    .variation-block { background: #f9f9f9; border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+    .add-btn { background: #e0e0e0; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; }
+    .add-btn:hover { background: #d0d0d0; }
+    .btn-description { font-size: 0.85em; color: #666; margin-top: 4px; }
+    .actions { display: flex; gap: 10px; margin-top: 15px; }
+    .remove-btn { background: #ff4d4d; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+    .save-btn { background: #4caf50; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <div class="menu-panel">
+    <h2>Scales List</h2>
+    <div class="controls">
+      <select id="scaleSelect" onchange="loadSelectedScale()"></select>
+      <button class="add-btn" onclick="createNewScaleForm()">+ Add New</button>
+      <button class="remove-btn" onclick="removeSelectedScale()">Remove</button>
+    </div>
+
+    <form id="scaleForm" onsubmit="event.preventDefault();">
+      <div class="field-group">
+        <label for="scaleName">Name</label>
+        <input type="text" id="scaleName" placeholder="e.g. F# Major tonal centre" required>
+      </div>
+
+      <div class="field-group">
+        <label for="octaves">Octaves</label>
+        <input type="number" id="octaves" value="2" min="1" max="5" required>
+      </div>
+
+      <h3>Variations</h3>
+      <div id="variationsList" class="variations-container"></div>
+
+      <div>
+        <button type="button" class="add-btn" onclick="addVariationBlock()">+ Add Variation</button>
+        <div class="btn-description">
+          Adds a variation for scales like tonal centres that have multiple scales grouped together.
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="save-btn" onclick="saveAllData()">Save All Data</button>
+      </div>
+    </form>
+  </div>
+
+<script>
+  let scalesData = []; // Loaded scale store
+
+  // Load Initial JSON
+  async function init() {
+    // Replace with your fetch syntax: const res = await fetch('scales.json');
+    // scalesData = await res.json();
+    populateDropdown();
+  }
+
+  function populateDropdown() {
+    const select = document.getElementById('scaleSelect');
+    select.innerHTML = '';
+    scalesData.forEach((scale, index) => {
+      const opt = document.createElement('option');
+      opt.value = index;
+      opt.textContent = scale.name;
+      select.appendChild(opt);
+    });
+    if (scalesData.length > 0) {
+      select.selectedIndex = 0;
+      loadSelectedScale();
+    } else {
+      createNewScaleForm();
+    }
+  }
+
+  function loadSelectedScale() {
+    const select = document.getElementById('scaleSelect');
+    if (select.value === '') return;
+    const scale = scalesData[select.value];
+
+    document.getElementById('scaleName').value = scale.name;
+    document.getElementById('octaves').value = scale.octaves || 2;
+    
+    const container = document.getElementById('variationsList');
+    container.innerHTML = '';
+
+    for (const [varName, notesArray] of Object.entries(scale.variations)) {
+      addVariationBlock(varName, notesArray.join(', '));
+    }
+  }
+
+  function addVariationBlock(varName = '', notesStr = '') {
+    const container = document.getElementById('variationsList');
+    const block = document.createElement('div');
+    block.className = 'variation-block';
+    block.innerHTML = `
+      <div class="field-group">
+        <label>Variation Name</label>
+        <input type="text" class="var-name" value="${varName}" placeholder="e.g. major, harmonic, arpeggio" required>
+      </div>
+      <div class="field-group">
+        <label>Notes</label>
+        <input type="text" class="var-notes" value="${notesStr}" placeholder="use this format: A, A#, Ab" required>
+      </div>
+      <button type="button" onclick="this.parentElement.remove()" style="color:red; background:none; border:none; cursor:pointer;">Remove Variation</button>
+    `;
+    container.appendChild(block);
+  }
+
+  function createNewScaleForm() {
+    document.getElementById('scaleSelect').value = '';
+    document.getElementById('scaleName').value = '';
+    document.getElementById('octaves').value = 2;
+    document.getElementById('variationsList').innerHTML = '';
+    addVariationBlock('standard', '');
+  }
+
+  function saveAllData() {
+    const name = document.getElementById('scaleName').value.trim();
+    const octaves = parseInt(document.getElementById('octaves').value, 10);
+    if (!name) return alert('Please enter a scale name.');
+
+    const variationBlocks = document.querySelectorAll('.variation-block');
+    const variations = {};
+
+    variationBlocks.forEach(block => {
+      const vName = block.querySelector('.var-name').value.trim();
+      const vNotesRaw = block.querySelector('.var-notes').value;
+      
+      // Parse, trim, and format note entries (capitalized with accidentals)
+      const notesArray = vNotesRaw.split(',')
+        .map(n => n.trim())
+        .filter(n => n.length > 0)
+        .map(n => n.charAt(0).toUpperCase() + n.slice(1));
+
+      if (vName && notesArray.length > 0) {
+        variations[vName] = notesArray;
+      }
+    });
+
+    const scaleObject = { name, octaves, variations };
+    const select = document.getElementById('scaleSelect');
+
+    if (select.value !== '') {
+      scalesData[select.value] = scaleObject;
+    } else {
+      scalesData.push(scaleObject);
+    }
+
+    populateDropdown();
+    alert('Scales updated successfully!');
+  }
+
+  function removeSelectedScale() {
+    const select = document.getElementById('scaleSelect');
+    if (select.value === '') return;
+    
+    scalesData.splice(select.value, 1);
+    populateDropdown();
+  }
+
+  window.onload = init;
+  <script src="script.js"></script>
+</body>
+</html>
+
