@@ -1,0 +1,126 @@
+[
+  {
+    "name": "F# Major tonal centre",
+    "octaves": 3,
+    "variations": {
+      "major": ["F#", "G#", "Bb", "B", "C#", "Eb", "F", "F#"],
+      "arpeggio": ["F#", "Bb", "C#", "F#"]
+    }
+  },
+  {
+    "name": "F# Minor tonal centre",
+    "octaves": 3,
+    "variations": {
+      "melodic": ["F#", "G#", "A", "B", "C#", "Eb", "F", "F#", ";", "E", "D", "C#", "B", "A", "G#", "F#"],
+      "harmonic": ["F#", "G#", "A", "B", "C#", "D", "F", "F#"],
+      "arpeggio": ["F#", "A", "C#", "F#"]
+    }
+  },
+  {
+    "name": "Bb Major tonal centre",
+    "octaves": 2,
+    "variations": {
+      "major": ["Bb", "C", "D", "Eb", "F", "G", "A", "Bb"],
+      "arpeggio": ["Bb", "D", "F", "Bb"]
+    }
+  },
+  {
+    "name": "Bb Minor tonal centre",
+    "octaves": 2,
+    "variations": {
+      "melodic": ["Bb", "C", "C#", "Eb", "F", "G", "A", "Bb", ";", "G#", "F#", "F", "Eb", "C#", "C", "Bb"],
+      "harmonic": ["Bb", "C", "C#", "Eb", "F", "F#", "A", "Bb"],
+      "arpeggio": ["Bb", "C#", "F", "Bb"]
+    }
+  },
+  {
+    "name": "D Major tonal centre",
+    "octaves": 2,
+    "variations": {
+      "major": ["D", "E", "F#", "G", "A", "B", "C#", "D"],
+      "arpeggio": ["D", "F#", "A", "D"]
+    }
+  },
+  {
+    "name": "D Minor tonal centre",
+    "octaves": 2,
+    "variations": {
+      "melodic": ["D", "E", "F", "G", "A", "B", "C#", "D", ";", "C", "Bb", "A", "G", "F", "E", "D"],
+      "harmonic": ["D", "E", "F", "G", "A", "Bb", "C#", "D"],
+      "arpeggio": ["D", "F", "A", "D"]
+    }
+  },
+  {
+    "name": "Eb Major tonal centre",
+    "octaves": 2,
+    "variations": {
+      "major": ["Eb", "F", "G", "G#", "Bb", "C", "D", "Eb"],
+      "arpeggio": ["Eb", "G", "Bb", "Eb"]
+    }
+  },
+  {
+    "name": "Eb Minor tonal centre",
+    "octaves": 2,
+    "variations": {
+      "melodic": ["Eb", "F", "F#", "G#", "Bb", "C", "D", "Eb", ";", "C#", "B", "Bb", "G#", "F#", "F", "Eb"],
+      "harmonic": ["Eb", "F", "F#", "G#", "Bb", "B", "D", "Eb"],
+      "arpeggio": ["Eb", "F#", "Bb", "Eb"]
+    }
+  },
+  {
+    "name": "Chromatic scale starting on F#",
+    "octaves": 3,
+    "variations": {
+      "standard": ["F#", "G", "G#", "A", "Bb", "B", "C", "C#", "D", "Eb", "E", "F", "F#"]
+    }
+  },
+  {
+    "name": "Diminished 7th starting on F#",
+    "octaves": 3,
+    "variations": {
+      "standard": ["F#", "A", "C", "Eb", "F#"]
+    }
+  },
+  {
+    "name": "Pentatonic (major) starting on Bb",
+    "octaves": 2,
+    "variations": {
+      "standard": ["Bb", "C", "D", "F", "G", "Bb"]
+    }
+  },
+  {
+    "name": "Pentatonic (major) starting on Eb",
+    "octaves": 2,
+    "variations": {
+      "standard": ["Eb", "F", "G", "Bb", "C", "Eb"]
+    }
+  },
+  {
+    "name": "Whole-tone scale starting on Eb",
+    "octaves": 2,
+    "variations": {
+      "standard": ["Eb", "F", "G", "A", "B", "C#", "Eb"]
+    }
+  },
+  {
+    "name": "Dominant 7th in the key of Eb",
+    "octaves": 2,
+    "variations": {
+      "standard": ["Bb", "D", "F", "G#", "Bb"]
+    }
+  },
+  {
+    "name": "Dominant 7th in the key of G",
+    "octaves": 2,
+    "variations": {
+      "standard": ["D", "F#", "A", "C", "D"]
+    }
+  },
+  {
+    "name": "Augmented arpeggio starting on D",
+    "octaves": 2,
+    "variations": {
+      "standard": ["D", "F#", "Bb", "D"]
+    }
+  }
+]
